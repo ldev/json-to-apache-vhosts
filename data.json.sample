@@ -16,7 +16,7 @@
         "enforce_https": false,
         "allow_override_on_root": true,
         "ssl_parent_domain": "example.no",
-        "custom_config": "\n\t<FilesMatch \"\\.phps$\">\n\t\tSetHandler application\/x-httpd-php-source\n\t\tRequire all granted\n\t<\/FilesMatch>"
+        "custom_config": "\n<FilesMatch \"\\.phps$\">\n\tSetHandler application\/x-httpd-php-source\n\tRequire all granted\n<\/FilesMatch>"
     },
     "another.tld": {
         "root": "\/var\/www\/another.tld\/www_root\/"

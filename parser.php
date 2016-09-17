@@ -17,45 +17,46 @@
         $custom_config = isset($v['custom_config']) ? $v['custom_config'] : $defaults['custom_config'];
         
         $export = '
-    <VirtualHost *:80>
-	    ServerName ' . $hostname . '
-	    DocumentRoot ' . $root . '
+<VirtualHost *:80>
+    ServerName ' . $hostname . '
+    DocumentRoot ' . $root . '
 
-	    ErrorLog ${APACHE_LOG_DIR}/' . $hostname . '_error.log
-	    CustomLog ${APACHE_LOG_DIR}/' . $hostname . '_access.log combined';
-        if($enforce_https === true){
-            $export .= '
-	    # Redirects everything to https
-	    RewriteEngine On
-	    RewriteCond %{HTTPS} off
-	    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}';
-        }
-        
+    ErrorLog ${APACHE_LOG_DIR}/' . $hostname . '_error.log
+    CustomLog ${APACHE_LOG_DIR}/' . $hostname . '_access.log combined';
+    if($enforce_https === true){
         $export .= '
-    </VirtualHost>
-    <VirtualHost *:443>
-	    ServerName ' . $hostname . '
-	    DocumentRoot ' . $root . '
-	    ErrorLog ${APACHE_LOG_DIR}/' . $hostname . '_error.log
-	    CustomLog ${APACHE_LOG_DIR}/' . $hostname . '_access.log combined';
-	
-	    if($ssl_parent_domain !== false){
-	        $export .= 'SSLEngine on
-        SSLCertificateFile    /etc/letsencrypt/live/' . $ssl_parent_domain . '/cert.pem
-        SSLCertificateKeyFile /etc/letsencrypt/live/' . $ssl_parent_domain . '/privkey.pem
-        SSLCertificateChainFile /etc/letsencrypt/live/' . $ssl_parent_domain . '/fullchain.pem';
-	    }
-        
-        $export .= '
-        </VirtualHost>';
+    # Redirects everything to https
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}';
+    }
+    
+    $export .= '
+</VirtualHost>
+<VirtualHost *:443>
+    ServerName ' . $hostname . '
+    DocumentRoot ' . $root . '
+    ErrorLog ${APACHE_LOG_DIR}/' . $hostname . '_error.log
+    CustomLog ${APACHE_LOG_DIR}/' . $hostname . '_access.log combined';
+
+    if($ssl_parent_domain !== false){
+        $export .= 'SSLEngine on
+    SSLCertificateFile    /etc/letsencrypt/live/' . $ssl_parent_domain . '/cert.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/' . $ssl_parent_domain . '/privkey.pem
+    SSLCertificateChainFile /etc/letsencrypt/live/' . $ssl_parent_domain . '/fullchain.pem';
+    }
+    
+    $export .= '
+</VirtualHost>
+';
 
         if($custom_config !== false){
-            $export .= "\n" . $custom_config;
+            $export .= "\n" . $custom_config . "\n";
         }
 
         if(file_put_contents('generated-vhost-configs/' . $hostname . '.conf', $export) !== false){
             $i++;
         }
     }
-    echo 'finished - wrote ' . (int) $i . ' .conf files';
+    exit('finished - wrote ' . (int) $i . ' .conf files' . "\n");
 ?>
