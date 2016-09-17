@@ -3,7 +3,9 @@
     if(is_readable('data.json') === false){
         exit('The file "data.json" does not exist, or is not readable. Check the documentation on Github.' . "\n");
     } 
-    $dataset = json_decode(file_get_contents('data.json'), true);
+    if(!$dataset = json_decode(file_get_contents('data.json'), true)){
+        exit('Could not load JSON file. Syntax error?' . "\n");
+    }
 
     $defaults = array_shift($dataset);
 
@@ -20,8 +22,11 @@
 <VirtualHost *:80>
     ServerName ' . $hostname . '
     DocumentRoot ' . $root . '
-
-    ErrorLog ${APACHE_LOG_DIR}/' . $hostname . '_error.log
+    ';
+    if($aliases !== false && count($aliases) > 0){
+        $export .= 'ServerAlias ' . implode(' ', $aliases) . "\n";
+    }
+    $export .='ErrorLog ${APACHE_LOG_DIR}/' . $hostname . '_error.log
     CustomLog ${APACHE_LOG_DIR}/' . $hostname . '_access.log combined';
     if($enforce_https === true){
         $export .= '
@@ -36,7 +41,11 @@
 <VirtualHost *:443>
     ServerName ' . $hostname . '
     DocumentRoot ' . $root . '
-    ErrorLog ${APACHE_LOG_DIR}/' . $hostname . '_error.log
+    ';
+    if($aliases !== false && count($aliases) > 0){
+        $export .= 'ServerAlias ' . implode(' ', $aliases) . "\n";
+    }
+    $export .='ErrorLog ${APACHE_LOG_DIR}/' . $hostname . '_error.log
     CustomLog ${APACHE_LOG_DIR}/' . $hostname . '_access.log combined';
 
     if($ssl_parent_domain !== false){

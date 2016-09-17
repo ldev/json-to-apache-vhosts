@@ -33,11 +33,19 @@ Plans: Not much specific. Perhaps Python and Jinja2?
         "root": "\/var\/www\/some.subdomain.example.tld\/www_root\/",
         "enforce_https": false,
         "allow_override_on_root": true,
-        "ssl_parent_domain": "example.no",
+        "ssl_parent_domain": "example.tld",
         "custom_config": "\n<FilesMatch \"\\.phps$\">\n\tSetHandler application\/x-httpd-php-source\n\tRequire all granted\n<\/FilesMatch>"
     },
     "another.tld": {
         "root": "\/var\/www\/another.tld\/www_root\/"
+    },
+    "yet-another-example.tld": {
+        "root": "\/var\/www\/yet-another-example.tld\/www_root\/",
+        "ssl_parent_domain": "yet-another-example.tld",
+        "aliases": [
+            "www.yet-another-example.tld",
+            "www-public.yet-another-example.tld"
+        ]
     }
 }
 ```
@@ -53,7 +61,6 @@ Plans: Not much specific. Perhaps Python and Jinja2?
 <VirtualHost *:80>
     ServerName another.tld
     DocumentRoot /var/www/another.tld/www_root/
-
     ErrorLog ${APACHE_LOG_DIR}/another.tld_error.log
     CustomLog ${APACHE_LOG_DIR}/another.tld_access.log combined
     # Redirects everything to https
@@ -73,7 +80,6 @@ Plans: Not much specific. Perhaps Python and Jinja2?
 <VirtualHost *:80>
     ServerName example.tld
     DocumentRoot /var/www/example.tld/www_root/
-
     ErrorLog ${APACHE_LOG_DIR}/example.tld_error.log
     CustomLog ${APACHE_LOG_DIR}/example.tld_access.log combined
     # Redirects everything to https
@@ -96,7 +102,6 @@ Plans: Not much specific. Perhaps Python and Jinja2?
 <VirtualHost *:80>
     ServerName some.subdomain.example.tld
     DocumentRoot /var/www/some.subdomain.example.tld/www_root/
-
     ErrorLog ${APACHE_LOG_DIR}/some.subdomain.example.tld_error.log
     CustomLog ${APACHE_LOG_DIR}/some.subdomain.example.tld_access.log combined
 </VirtualHost>
@@ -105,9 +110,9 @@ Plans: Not much specific. Perhaps Python and Jinja2?
     DocumentRoot /var/www/some.subdomain.example.tld/www_root/
     ErrorLog ${APACHE_LOG_DIR}/some.subdomain.example.tld_error.log
     CustomLog ${APACHE_LOG_DIR}/some.subdomain.example.tld_access.log combinedSSLEngine on
-    SSLCertificateFile    /etc/letsencrypt/live/example.no/cert.pem
-    SSLCertificateKeyFile /etc/letsencrypt/live/example.no/privkey.pem
-    SSLCertificateChainFile /etc/letsencrypt/live/example.no/fullchain.pem
+    SSLCertificateFile    /etc/letsencrypt/live/example.tld/cert.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/example.tld/privkey.pem
+    SSLCertificateChainFile /etc/letsencrypt/live/example.tld/fullchain.pem
 </VirtualHost>
 
 
@@ -115,6 +120,30 @@ Plans: Not much specific. Perhaps Python and Jinja2?
 	SetHandler application/x-httpd-php-source
 	Require all granted
 </FilesMatch>
+
+# generated-vhost-configs/yet-another-example.tld.conf:
+
+<VirtualHost *:80>
+    ServerName yet-another-example.tld
+    DocumentRoot /var/www/yet-another-example.tld/www_root/
+    ServerAlias www.yet-another-example.tld www-public.yet-another-example.tld
+ErrorLog ${APACHE_LOG_DIR}/yet-another-example.tld_error.log
+    CustomLog ${APACHE_LOG_DIR}/yet-another-example.tld_access.log combined
+    # Redirects everything to https
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+</VirtualHost>
+<VirtualHost *:443>
+    ServerName yet-another-example.tld
+    DocumentRoot /var/www/yet-another-example.tld/www_root/
+    ServerAlias www.yet-another-example.tld www-public.yet-another-example.tld
+ErrorLog ${APACHE_LOG_DIR}/yet-another-example.tld_error.log
+    CustomLog ${APACHE_LOG_DIR}/yet-another-example.tld_access.log combinedSSLEngine on
+    SSLCertificateFile    /etc/letsencrypt/live/yet-another-example.tld/cert.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/yet-another-example.tld/privkey.pem
+    SSLCertificateChainFile /etc/letsencrypt/live/yet-another-example.tld/fullchain.pem
+</VirtualHost>
 ```
 
 
