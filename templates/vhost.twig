@@ -1,0 +1,51 @@
+<VirtualHost *:80>
+    ServerName {{ hostname }}
+    DocumentRoot {{ root }}
+    
+    {% if aliases|length > 0 %}
+    ServerAlias {{ aliases|join(' ') }}
+    {% endif %}
+    
+    ErrorLog ${APACHE_LOG_DIR}/{{ hostname }}_error.log
+    CustomLog ${APACHE_LOG_DIR}/{{ hostname }}_access.log combined
+    
+    {% if enforce_https %}
+    
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+    {% endif %}
+    
+</VirtualHost>
+
+{% if ssl_parent_domain %}
+<VirtualHost *:443>
+    ServerName {{ hostname }}
+    DocumentRoot {{ root }}
+
+    {% if aliases|length > 0 %}
+    ServerAlias {{ aliases|join(' ') }}
+    {% endif %}
+    
+    ErrorLog ${APACHE_LOG_DIR}/{{ hostname }}_error.log
+    CustomLog ${APACHE_LOG_DIR}/{{ hostname }}_access.log combined
+
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/{{ ssl_parent_domain }}/cert.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/{{ ssl_parent_domain }}/privkey.pem
+    SSLCertificateChainFile /etc/letsencrypt/live/{{ ssl_parent_domain }}/fullchain.pem
+</VirtualHost>
+{% endif%}
+
+{% if allow_override_on_root %}
+<Directory "{{ root }}">
+    Require all granted
+    AllowOverride All
+</Directory>
+{% endif %}
+
+{% if custom_config %}
+{% autoescape false %}
+{{ custom_config }}
+{% endautoescape %}
+{% endif %}

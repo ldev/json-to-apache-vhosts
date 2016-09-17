@@ -1,69 +1,56 @@
 <?php
-
-    if(is_readable('data.json') === false){
-        exit('The file "data.json" does not exist, or is not readable. Check the documentation on Github.' . "\n");
+    if(isset($argv[1])){
+        $json_file = $argv[1];
+    }else{
+        $json_file = 'data.json';
+    }
+    
+    require_once 'twig/lib/Twig/Autoloader.php';
+    Twig_Autoloader::register();
+     
+    $loader = new Twig_Loader_Filesystem('templates');
+    $twig = new Twig_Environment($loader, array(
+        // 'cache' => 'compilation_cache',
+    ));
+    
+    if(is_readable($json_file) === false){
+        exit('The file ' . $json_file . '" does not exist, or is not readable. Check the documentation on Github.' . "\n");
     } 
-    if(!$dataset = json_decode(file_get_contents('data.json'), true)){
-        exit('Could not load JSON file. Syntax error?' . "\n");
+    if(!$dataset = json_decode(file_get_contents($json_file), true)){
+        exit('Could not load JSON file "' . $json_file . '". Syntax error?' . "\n");
     }
 
     $defaults = array_shift($dataset);
 
     $i = 0; # counter
-    foreach($dataset as $hostname => $v){
-        # Setting up variables for each domain
-        $root = isset($v['root']) ? $v['root'] : $defaults['root'];
-        $enforce_https = isset($v['enforce_https']) ? $v['enforce_https'] : $defaults['enforce_https'];
-        $ssl_parent_domain = isset($v['ssl_parent_domain']) ? $v['ssl_parent_domain'] : $defaults['ssl_parent_domain'];
-        $aliases = isset($v['aliases']) ? $v['aliases'] : $defaults['aliases'];
-        $custom_config = isset($v['custom_config']) ? $v['custom_config'] : $defaults['custom_config'];
-        
-        $export = '
-<VirtualHost *:80>
-    ServerName ' . $hostname . '
-    DocumentRoot ' . $root . '
-    ';
-    if($aliases !== false && count($aliases) > 0){
-        $export .= 'ServerAlias ' . implode(' ', $aliases) . "\n";
-    }
-    $export .='ErrorLog ${APACHE_LOG_DIR}/' . $hostname . '_error.log
-    CustomLog ${APACHE_LOG_DIR}/' . $hostname . '_access.log combined';
-    if($enforce_https === true){
-        $export .= '
-    # Redirects everything to https
-    RewriteEngine On
-    RewriteCond %{HTTPS} off
-    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}';
-    }
     
-    $export .= '
-</VirtualHost>
-<VirtualHost *:443>
-    ServerName ' . $hostname . '
-    DocumentRoot ' . $root . '
-    ';
-    if($aliases !== false && count($aliases) > 0){
-        $export .= 'ServerAlias ' . implode(' ', $aliases) . "\n";
-    }
-    $export .='ErrorLog ${APACHE_LOG_DIR}/' . $hostname . '_error.log
-    CustomLog ${APACHE_LOG_DIR}/' . $hostname . '_access.log combined';
-
-    if($ssl_parent_domain !== false){
-        $export .= 'SSLEngine on
-    SSLCertificateFile    /etc/letsencrypt/live/' . $ssl_parent_domain . '/cert.pem
-    SSLCertificateKeyFile /etc/letsencrypt/live/' . $ssl_parent_domain . '/privkey.pem
-    SSLCertificateChainFile /etc/letsencrypt/live/' . $ssl_parent_domain . '/fullchain.pem';
-    }
-    
-    $export .= '
-</VirtualHost>
-';
-
-        if($custom_config !== false){
-            $export .= "\n" . $custom_config . "\n";
+    /**
+     * Used to get values from the JSON dataset based on key, with fallback to
+     * default if nothing is specified in the JSON dataset for the host.
+     * @param $hostname Hostname to lookup
+     * @poram $key Key to search for
+     * @return string|bool Content from JSON dataset
+     */
+    function extract_json($hostname, $key){
+        global $dataset;
+        global $defaults;
+        if(isset($dataset[$hostname][$key])){
+            return $dataset[$hostname][$key];
+        }else{
+            return $defaults[$key];
         }
-
-        if(file_put_contents('generated-vhost-configs/' . $hostname . '.conf', $export) !== false){
+    }
+    
+    foreach($dataset as $hostname => $v){
+        $context = array(
+            'root' => extract_json($hostname, 'root'),
+            'enforce_https' => extract_json($hostname, 'enforce_https'),
+            'ssl_parent_domain' => extract_json($hostname, 'ssl_parent_domain'),
+            'aliases' => extract_json($hostname, 'aliases'),
+            'custom_config' => extract_json($hostname, 'custom_config'),
+            'allow_override_on_root' => extract_json($hostname, 'allow_override_on_root')
+        );
+        if(file_put_contents('generated-vhost-configs/' . $hostname . '.conf', $twig->render('vhost.twig', $context)) !== false){
             $i++;
         }
     }

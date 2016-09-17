@@ -10,8 +10,9 @@ Plans: Not much specific. Perhaps Python and Jinja2?
 # Usage
  * Download this little beauty of a script
  * Do a `chmod 777 generated-vhost-configs`. This is not necessary if your user have write previlegies to the directory
- * copy `data.json.sample` to `data.json` and edit to your liking
- * Run it with `php -f parser.php` and enjoy
+ * Optional: copy `data.json.sample` to `data.json` and edit to your liking
+ * Optional: edit templates/vhost.twig
+ * Run it with `php -f parser.php [json-file]` and enjoy.
  
 # Example
 ## The following json.data file...
@@ -148,7 +149,7 @@ ErrorLog ${APACHE_LOG_DIR}/yet-another-example.tld_error.log
 
 
 # Liceense
-Do whatever you want with this. It is to be concidered public domain.
+Do whatever you want with this. It is to be concidered public domain. The project uses Twig as a template engine, which probably has their own licenses.
 
 
 Regards,
