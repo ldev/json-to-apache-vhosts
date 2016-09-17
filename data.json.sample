@@ -1,0 +1,24 @@
+{
+    "defaults": {
+        "root": "\/var\/www\/parked_domain",
+        "enforce_https": true,
+        "ssl_parent_domain": false,
+        "aliases": false,
+        "allow_override_on_root": false,
+        "custom_config": false
+    },
+    "example.tld": {
+        "root": "\/var\/www\/example.tld\/www_root\/",
+        "ssl_parent_domain": "example.tld"
+    },
+    "some.subdomain.example.tld": {
+        "root": "\/var\/www\/some.subdomain.example.tld\/www_root\/",
+        "enforce_https": false,
+        "allow_override_on_root": true,
+        "ssl_parent_domain": "example.no",
+        "custom_config": "\n\t<FilesMatch \"\\.phps$\">\n\t\tSetHandler application\/x-httpd-php-source\n\t\tRequire all granted\n\t<\/FilesMatch>"
+    },
+    "another.tld": {
+        "root": "\/var\/www\/another.tld\/www_root\/"
+    }
+}
