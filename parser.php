@@ -43,6 +43,7 @@
     
     foreach($dataset as $hostname => $v){
         $context = array(
+            'hostname' => $hostname,
             'root' => extract_json($hostname, 'root'),
             'enforce_https' => extract_json($hostname, 'enforce_https'),
             'ssl_parent_domain' => extract_json($hostname, 'ssl_parent_domain'),

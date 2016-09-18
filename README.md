@@ -148,7 +148,7 @@ ErrorLog ${APACHE_LOG_DIR}/yet-another-example.tld_error.log
 ```
 
 
-# Liceense
+# License
 Do whatever you want with this. It is to be concidered public domain. The project uses Twig as a template engine, which probably has their own licenses.
 
 
